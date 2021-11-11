@@ -84,7 +84,7 @@ def load_network(
     ) -> None:
     PanoDRmodel = PanoDR(opt=args, device=device)
     if args.gpu_id > 0:
-        checkpoint = torch.hub.load_state_dict_from_url(args.eval_chkpnt_folder, map_location='cpu')
+        checkpoint = torch.hub.load_state_dict_from_url(args.eval_chkpnt_folder, map_location = torch.device(device))
     else:
         checkpoint = torch.hub.load_state_dict_from_url(args.eval_chkpnt_folder, map_location='cpu')
     PanoDRmodel.netG.load_state_dict(checkpoint)
