@@ -60,7 +60,7 @@ def parseArguments():
     return arguments
 
 def main(args):
-    st.title("Web App")
+    st.title("PanoDR Web App")
     st.sidebar.title('Navigation')
     st.sidebar.header('Options')
 
