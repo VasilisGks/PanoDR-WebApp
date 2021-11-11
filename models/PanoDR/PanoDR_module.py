@@ -9,10 +9,7 @@ from .basemodel import BaseModel
 from .basenet import BaseNet
 from .GatedConv.network_module import *
 from .PanoDR_networks import *
-try:
-    from torch.hub import load_state_dict_from_url
-except ImportError:
-    from torch.utils.model_zoo import load_url as load_state_dict_from_url
+import streamlit as st
 
 class PanoDR(BaseModel):
     def __init__(self, act=F.elu, opt=None, device=None):
@@ -24,9 +21,10 @@ class PanoDR(BaseModel):
         init_weights(self.netG, init_type=self.opt.init_type)
         
         if self.opt.structure_model != "":
-            checkpoint = torch.hub.load_state_dict_from_url(opt.segmentation_model_chkpnt, map_location='cpu')
-            self.netG.structure_model.load_state_dict(checkpoint)
-            self.netG.structure_model.to(self.device)
+            # checkpoint = torch.hub.load_state_dict_from_url(opt.segmentation_model_chkpnt, map_location='cpu')
+            # self.netG.structure_model.load_state_dict(checkpoint)
+            # self.netG.structure_model.to(self.device)
+            self.load_networks(self.netG.structure_model, self.opt.segmentation_model_chkpnt, self.device)
             print("Freezing Layout segmentation network's weights\n")
             for param in self.netG.structure_model.parameters():
                 param.requires_grad = False
@@ -36,6 +34,13 @@ class PanoDR(BaseModel):
         self.model_names = ['D', 'G']
         if self.opt.phase == 'test':
             return
+            
+    @st.cache(allow_output_mutation=True, ttl=3600, max_entries=1)
+    def load_networks(self, model, load_path, device):
+        checkpoint = torch.hub.load_state_dict_from_url(load_path, map_location='cpu')
+        model.load_state_dict(checkpoint)
+        model.to(device)
+        return 
 
     def get_current_learning_rate(self):
         return self.optimizers[0].param_groups[0]['lr']
@@ -58,7 +63,6 @@ class PanoDR(BaseModel):
         self.mask_patch_gt = self.gt_empty * self.inverse_mask 
         self.epoch = epoch
         self.iteration = iteration
-
 
     def inference_file(self, images, mask, f_name):
 
