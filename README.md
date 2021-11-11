@@ -33,4 +33,5 @@ http://localhost:8501/
 ```
 in your browser. You can either select a panorama from the list, or upload one of your choice.
 
+## Web app usage example:
 ![](https://github.com/VCL3D/PanoDR/blob/gh-pages/assets/web_app.gif) <br />
