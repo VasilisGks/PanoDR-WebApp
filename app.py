@@ -26,7 +26,7 @@ def parseArguments():
     parser.add_argument('--height', type=int, default=256)
     #PanoDR params
     parser.add_argument('--eval_path', type=str, default='output/')
-    parser.add_argument('--gpu_id', type=int, default=-1)
+    parser.add_argument('--gpu_id', type=int, default=-0)
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--segmentation_model_chkpnt', type = str, default = 'https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/Unet_epoch23.zip', help = 'Save checkpoints here')
     parser.add_argument('--eval_chkpnt_folder', type=str, default='https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/57_net_G.zip')

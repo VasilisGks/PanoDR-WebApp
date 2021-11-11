@@ -83,10 +83,10 @@ def load_network(
     ) -> None:
     PanoDRmodel = PanoDR(opt=args, device=device)
 
-    checkpoint_segm = torch.hub.load_state_dict_from_url(args.segmentation_model_chkpnt, map_location='cpu')
+    checkpoint_segm = torch.hub.load_state_dict_from_url(args.segmentation_model_chkpnt, map_location=device)
     PanoDRmodel.netG.structure_model.load_state_dict(checkpoint_segm)
 
-    checkpoint = torch.hub.load_state_dict_from_url(args.eval_chkpnt_folder, map_location='cpu')
+    checkpoint = torch.hub.load_state_dict_from_url(args.eval_chkpnt_folder, map_location=device)
     PanoDRmodel.netG.load_state_dict(checkpoint)
 
     PanoDRmodel = PanoDRmodel.to(device)
