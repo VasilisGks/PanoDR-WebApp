@@ -20,12 +20,6 @@ class PanoDR(BaseModel):
         self.netG = GatedGenerator(self.opt, self.device).to(self.device)
         init_weights(self.netG, init_type=self.opt.init_type)
         
-        if self.opt.structure_model != "unet":
-            self.load_networks(self.netG.structure_model, self.opt.segmentation_model_chkpnt, self.device)
-            print("Freezing Layout segmentation network's weights\n")
-            for param in self.netG.structure_model.parameters():
-                param.requires_grad = False
-
         norm_layer = get_norm_layer()
 
         self.model_names = ['D', 'G']

@@ -38,7 +38,6 @@ def ApplyCanvas(stroke_width, stroke_color, bg_color, bg_image, drawing_mode, re
         key="canvas",
     )
     st_canvas(initial_drawing=canvas_result.json_data)
-
     return bg_image, canvas_result
 
 def DR_service(
