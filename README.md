@@ -31,4 +31,4 @@ and open
 ```bash
 http://localhost:8501/
 ```
-in your browser.
+in your browser. You can either select a panorama from the list, or upload one of your choice.
