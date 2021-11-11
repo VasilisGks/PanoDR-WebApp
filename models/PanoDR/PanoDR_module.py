@@ -20,10 +20,7 @@ class PanoDR(BaseModel):
         self.netG = GatedGenerator(self.opt, self.device).to(self.device)
         init_weights(self.netG, init_type=self.opt.init_type)
         
-        if self.opt.structure_model != "":
-            # checkpoint = torch.hub.load_state_dict_from_url(opt.segmentation_model_chkpnt, map_location='cpu')
-            # self.netG.structure_model.load_state_dict(checkpoint)
-            # self.netG.structure_model.to(self.device)
+        if self.opt.structure_model != "unet":
             self.load_networks(self.netG.structure_model, self.opt.segmentation_model_chkpnt, self.device)
             print("Freezing Layout segmentation network's weights\n")
             for param in self.netG.structure_model.parameters():
