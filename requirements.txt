@@ -1,6 +1,6 @@
 imutils==0.5.3
 numpy==1.17.4
-streamlit==0.80.0
+streamlit
 torchvision
 imageio
 Pillow==8.1.0
