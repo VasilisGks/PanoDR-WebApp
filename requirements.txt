@@ -5,7 +5,7 @@ torchvision
 imageio
 Pillow==8.1.0
 opencv-python-headless
-streamlit-webrtc~=0.11.0
+streamlit-webrtc==0.11.0
 lxml
 torch>=1.6.0
 streamlit-drawable-canvas == 0.8.0
