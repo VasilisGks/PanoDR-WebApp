@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ```
 
 ## Run
-In order to run the Web App simply run:
+In order to use the Web App simply run:
 ```bash
 streamlit run app.py
 ```
