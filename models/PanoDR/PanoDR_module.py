@@ -1,7 +1,9 @@
+from pkg_resources import load_entry_point
 from torch.optim import lr_scheduler
 from .layer import init_weights
 import numpy as np
 import torch
+from typing import Tuple
 import os
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,6 +12,7 @@ from .basenet import BaseNet
 from .GatedConv.network_module import *
 from .PanoDR_networks import *
 import streamlit as st
+from helpers import layoutViz
 
 class PanoDR(BaseModel):
     def __init__(self, act=F.elu, opt=None, device=None):
@@ -18,20 +21,21 @@ class PanoDR(BaseModel):
         self.init(opt)
         self.device = device
         self.netG = GatedGenerator(self.opt, self.device).to(self.device)
-        init_weights(self.netG, init_type=self.opt.init_type)
+        self.netG = self.load_networks(self.netG, self.opt.eval_chkpnt_folder_dr, self.device)
         
-        norm_layer = get_norm_layer()
-
         self.model_names = ['D', 'G']
         if self.opt.phase == 'test':
             return
             
     @st.cache(allow_output_mutation=True, ttl=3600, max_entries=1)
     def load_networks(self, model, load_path, device):
-        checkpoint = torch.hub.load_state_dict_from_url(load_path, map_location='cpu')
+        try:
+            checkpoint = torch.hub.load_state_dict_from_url(load_path, map_location=device)
+        except:
+            checkpoint = torch.load(load_path, map_location=torch.device(device))
         model.load_state_dict(checkpoint)
         model.to(device)
-        return 
+        return model
 
     def get_current_learning_rate(self):
         return self.optimizers[0].param_groups[0]['lr']
@@ -55,12 +59,7 @@ class PanoDR(BaseModel):
         self.epoch = epoch
         self.iteration = iteration
 
-    def inference_file(self, images, mask, f_name):
-
-        result_path = os.path.join(self.opt.eval_path, "output/")
-        os.makedirs(result_path, exist_ok=True)
-
-        self.f_name = None
+    def inference_file_dr(self, images, mask):
         self.images = images
         self.inverse_mask = mask
         self.mask = (1.0-self.inverse_mask)
@@ -75,12 +74,11 @@ class PanoDR(BaseModel):
         gt_img_masked = self.gt_empty * self.inverse_mask 
         gt_img_masked = gt_img_masked.squeeze_(0).permute(1,2,0).cpu().detach().numpy() 
 
+        #cv2.imwrite("D:/VCL/Users/gkitsasv/drservice/supplementary_offline/input/mask_4_2.png", self.inverse_mask.squeeze_(0).permute(1,2,0).cpu().detach().numpy()*255)
+        
         masked_input_np = masked_input.squeeze_(0).permute(1,2,0).cpu().detach().numpy()
+        dense_layout = self.structure_model_output_soft.squeeze_(0).permute(1,2,0).cpu().detach().numpy() 
+        dense_layout_viz = layoutViz(dense_layout)
 
-        _layout = self.structure_model_output_soft.squeeze_(0).permute(1,2,0).cpu().detach().numpy() 
-        a=np.argmax(_layout, axis=2)
-        z=np.zeros((256,512,3))
-        z[a==0] = (255,0,0);z[a==1] = (255,255,255);z[a==2] = (0,0,255)
-        z=z.astype(np.float32)
-        return raw_ret, ret, masked_input_np, z
+        return raw_ret, ret, masked_input_np, dense_layout_viz
         

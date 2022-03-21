@@ -114,62 +114,63 @@ class ResnetBlock(nn.Module):
         out = x + y
         return out
 
+
 class Zencoder(torch.nn.Module):
-    def __init__(self, input_nc, output_nc, ngf=32, n_downsampling=2, norm_layer=nn.InstanceNorm2d):
+    def __init__(self, input_nc, output_nc, ngf=32, n_downsampling=2, norm_layer=nn.InstanceNorm2d, use_weighted_avg=False):
         super(Zencoder, self).__init__()
         self.output_nc = output_nc
+        self.use_weighted_avg = use_weighted_avg
+        #self.exclude_foreground = exclude_foreground
+        self.background_mask = None
 
         model = [nn.ReflectionPad2d(1), nn.Conv2d(input_nc, ngf, kernel_size=3, padding=0),
                  norm_layer(ngf), nn.LeakyReLU(0.2, False)]
-        # model = [nn.ReflectionPad2d(1), nn.Conv2d(input_nc, ngf, kernel_size=3, padding=0),
-        #           nn.LeakyReLU(0.2, False)]
-        ### downsample
+        
         for i in range(n_downsampling):
             mult = 2**i
             model += [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1),
                       norm_layer(ngf * mult * 2), nn.LeakyReLU(0.2, False)]
-            # model += [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1),
-            #            nn.LeakyReLU(0.2, False)]
-        ### upsample
+
         for i in range(1):
             mult = 2**(n_downsampling - i)
             model += [nn.ConvTranspose2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, output_padding=1),
                        norm_layer(int(ngf * mult / 2)), nn.LeakyReLU(0.2, False)]
-            # model += [nn.ConvTranspose2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, output_padding=1),
-            #            nn.LeakyReLU(0.2, False)]
 
         model += [nn.ReflectionPad2d(1), nn.Conv2d(256, output_nc, kernel_size=3, padding=0), nn.Tanh()]
         self.model = nn.Sequential(*model)
 
 
-    def forward(self, input, segmap):
-
+    def forward(self, input, segmap, foreground, is_pred = False, exclude_foreground = False):
+        #Obtain background mask
+        if foreground is not None:
+            self.background_mask = 1 - foreground
+            segmap = segmap * self.background_mask
+        
         codes = self.model(input)
-
+        # if is_pred == True:
+        #     return codes
         segmap = F.interpolate(segmap, size=codes.size()[2:], mode='nearest')
 
-        # print(segmap.shape)
-        # print(codes.shape)
-
-
         b_size = codes.shape[0]
-        # h_size = codes.shape[2]
-        # w_size = codes.shape[3]
         f_size = codes.shape[1]
-
         s_size = segmap.shape[1]
 
         codes_vector = torch.zeros((b_size, s_size, f_size), dtype=codes.dtype, device=codes.device)
 
-
         for i in range(b_size):
             for j in range(s_size):
                 component_mask_area = torch.sum(segmap.bool()[i, j])
-
                 if component_mask_area > 0:
-                    codes_component_feature = codes[i].masked_select(segmap.bool()[i, j]).reshape(f_size,  component_mask_area).mean(1)
-                    codes_vector[i][j] = codes_component_feature
+                    alphas_codes_component = segmap[i,j].masked_select(segmap.bool()[i, j])
+                    codes_component_feature = codes[i].masked_select(segmap.bool()[i, j]).reshape(f_size,  component_mask_area)
 
-                    # codes_avg[i].masked_scatter_(segmap.bool()[i, j], codes_component_mu)
+                    if self.use_weighted_avg == True:
+                        codes_component_feature = (torch.mul(codes_component_feature, alphas_codes_component)) 
+                        codes_component_feature = torch.sum(codes_component_feature, dim=1) / torch.sum(alphas_codes_component)
+                        codes_vector[i][j] = codes_component_feature
+                    else:
+                        codes_component_feature = (torch.mul(codes_component_feature, alphas_codes_component)).mean(1) 
+
+                    codes_vector[i][j] = codes_component_feature
 
         return codes_vector

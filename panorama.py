@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.core.numeric import zeros_like
 import numpy.matlib as matlib
-from torch._C import dtype
 import cv2
 import torch
 

@@ -1,3 +1,4 @@
+from pickle import TRUE
 import streamlit as st
 
 from data import *
@@ -18,18 +19,36 @@ def _get_cached_version(cls, abs_path: str):
 
 StaticFileHandler._get_cached_version = _get_cached_version
 
-
 def parseArguments():
     parser = argparse.ArgumentParser()  
     parser.add_argument('--mask_method', type=str, default='FreeForm') 
     parser.add_argument('--width', type=int, default=512)
     parser.add_argument('--height', type=int, default=256)
     #PanoDR params
+    parser.add_argument('--model_type', type=str, default='DR')
     parser.add_argument('--eval_path', type=str, default='output/')
-    parser.add_argument('--gpu_id', type=int, default=-0)
+    parser.add_argument('--gpu_id', type=int, default=-1)
     parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--segmentation_model_chkpnt', type = str, default = 'https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/Unet_epoch23.zip', help = 'Save checkpoints here')
-    parser.add_argument('--eval_chkpnt_folder', type=str, default='https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/57_net_G.zip')
+    parser.add_argument('--ignore_id_softmax', action='store_false', default=True) #specifies whether to ignore idx=0 for pre-trained segmentation network
+    #PanoPaint
+    parser.add_argument('--segmentation_model_chkpnt', type = str, default = 'D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/Newest/21_net_unet.pth', help = 'Save checkpoints here')
+    #irr 04
+    #parser.add_argument('--eval_chkpnt_folder', type=str, default='D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/Newest/241_net_G.pth')
+    #irr 05: with Linear semantics
+    #Irregular holes
+    #parser.add_argument('--eval_chkpnt_folder', type=str, default='D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/w_l1_weigted/159_net_G.pth') #Irregular holesgood=159
+    #HR DR training with Linear Semantics
+    parser.add_argument('--eval_chkpnt_folder', type=str, default='D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/HR/73_net_G.pth') #good=159
+    #PanoDR
+    #parser.add_argument('--segmentation_model_chkpnt_dr', type = str, default = 'https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/Unet_epoch23.zip', help = 'Save checkpoints here')
+    #parser.add_argument('--eval_chkpnt_folder_dr', type=str, default='https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/57_net_G.zip')
+    parser.add_argument('--segmentation_model_chkpnt_dr', type = str, default = 'D:/VCL/PanoDR_app/Unet_epoch24.model', help = 'Save checkpoints here')
+    parser.add_argument('--eval_chkpnt_folder_dr', type=str, default='D:/VCL/PanoDR_app/57_net_G.pth')
+    parser.add_argument('--use_attention', action='store_true', default=True)
+    parser.add_argument('--use_blending', action='store_true', default=False)
+    parser.add_argument('--use_LS', action='store_true', default=True)
+    parser.add_argument('--use_softSean', action='store_true', default=False)
+    parser.add_argument('--use_coarse', type = bool, default = 'False', help = 'Save checkpoints here')
     parser.add_argument('--phase', type = str, default = 'test', help = 'load model name')
     parser.add_argument('--init_type', type = str, default = 'normal', help = 'the initialization type')
     parser.add_argument('--init_gain', type = float, default = 0.02, help = 'the initialization gain')
@@ -38,7 +57,9 @@ def parseArguments():
     parser.add_argument('--in_layout_channels', type = int, default = 3, help = '')
     parser.add_argument('--in_SEAN_channels', type = int, default = 3, help = '')
     parser.add_argument('--style_code_dim', type = int, default = 512, help = '')
+    parser.add_argument('--style_weighted_avg', action='store_true', default = False, help='Bool type')
     parser.add_argument('--in_channels', type = int, default = 4, help = '')
+    parser.add_argument('--first_kernel_size', type = int, default = 5, help = '')
     parser.add_argument('--in_spade_channels', type = int, default = 3, help = '')
     parser.add_argument('--in_d_channels', type = int, default = 4, help = '')
     parser.add_argument('--out_channels', type = int, default = 3, help = 'output 2D Coords')
@@ -55,6 +76,16 @@ def parseArguments():
     parser.add_argument('--type_sp', type=str, default='SEAN')
     parser.add_argument('--use_argmax', type=bool, default=True) 
     parser.add_argument('--use_sean', type=bool, default=True) 
+    # Linear semantics
+    parser.add_argument('--type_LS', type=str, default='LSE', choices=["LSE"]) #Types for Linear Semantics Mapping function
+    parser.add_argument('--out_classes', type=int, default=3)# 3 #41
+    parser.add_argument('--code_length', type=int, default=512)  #512 for original SEAN
+    parser.add_argument('--use_semantic_mask', type = bool, default =True, help = 'Whether to use the semantic mask vs dense layout')
+    #parser.add_argument('--use_LS', type=bool, default=True)
+    parser.add_argument('--use_w_avg', type=bool, default=False)
+    parser.add_argument('--Temperature', type=float, default=0.1)
+    parser.add_argument('--ls_height', type=int, default=128)
+    parser.add_argument('--ls_width', type=int, default=256)
     arguments = parser.parse_args()
 
     return arguments
@@ -65,7 +96,12 @@ def main(args):
     st.sidebar.header('Options')
 
     device = getDevice(args.gpu_id)
-    DR_service(args, device)
+    model_option = st.selectbox(
+        'Please select model:',
+        ('PanoDR', 'PanoPaint'))
+    args.model_type = model_option
+    
+    DR_service(args, device, model_option)
 
 if __name__ == '__main__':
     args = parseArguments()

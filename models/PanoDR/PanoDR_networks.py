@@ -25,30 +25,31 @@ class GatedGenerator(nn.Module):
             self.spade_block_2 = SPADEResnetBlock(opt.latent_channels*2, opt.latent_channels*2, opt.in_spade_channels, device=device, Block_Name='up_1')
         
         self.refinement = nn.Sequential(
-            # Surrounding Context Encoder
-            GatedConv2d(opt.in_channels, opt.latent_channels, 5, 2, 2, pad_type = opt.pad_type, activation = opt.activation, norm='none'),
-            GatedConv2d(opt.latent_channels, opt.latent_channels * 2, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 2, opt.latent_channels * 4, 3, 2, 1, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 2, dilation = 2, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 4, dilation = 4, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 8, dilation = 8, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 16, dilation = 16, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation, norm = opt.norm),
-            GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 4, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation),
+
+            GatedConv2d(4, self.opt.latent_channels, 5, 2, 2, pad_type = self.opt.pad_type, activation = self.opt.activation, norm='none'),
+            GatedConv2d(self.opt.latent_channels, self.opt.latent_channels * 2, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 2, self.opt.latent_channels * 4, 3, 2, 1, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            # Bottleneck
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 2, dilation = 2, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 4, dilation = 4, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 8, dilation = 8, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 16, dilation = 16, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation, norm = self.opt.norm),
+            GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 4, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation),
         )
         #Structure-Aware Decoder
         self.refine_dec_1 = nn.Sequential(nn.Upsample(scale_factor=2),
-        GatedConv2d(opt.latent_channels * 4, opt.latent_channels * 2, 3, 1, 1, activation = opt.activation, pad_type='zero', norm=opt.norm),
+        GatedConv2d(self.opt.latent_channels * 4, self.opt.latent_channels * 2, 3, 1, 1, activation = self.opt.activation, pad_type='zero', norm=self.opt.norm),
         )
-        self.refine_dec_2 =  GatedConv2d(opt.latent_channels * 2, opt.latent_channels * 2, 3, 1, 1, pad_type = opt.pad_type, activation = opt.activation)
+        self.refine_dec_2 =  GatedConv2d(self.opt.latent_channels * 2, self.opt.latent_channels * 2, 3, 1, 1, pad_type = self.opt.pad_type, activation = self.opt.activation)
         self.refine_dec_3 = nn.Sequential(nn.Upsample(scale_factor=2), 
 
-        GatedConv2d(opt.latent_channels * 2, opt.latent_channels, 3, 1, 1, pad_type ='zero', activation = opt.activation),
+        GatedConv2d(self.opt.latent_channels * 2, self.opt.latent_channels, 3, 1, 1, pad_type ='zero', activation = self.opt.activation),
         )
-        self.refine_dec_4 = GatedConv2d(opt.latent_channels, opt.out_channels, 3, 1, 1, pad_type = opt.pad_type, norm='none', activation = 'tanh')
+        self.refine_dec_4 = GatedConv2d(self.opt.latent_channels, self.opt.out_channels, 3, 1, 1, pad_type = self.opt.pad_type, norm='none', activation = 'tanh')
 
 
     def forward(self, img, inverse_mask, masked_input, device, use_sean):
@@ -56,14 +57,10 @@ class GatedGenerator(nn.Module):
         first_out = masked_input
         structure_model_output = self.structure_model(masked_input).clone() 
 
-        if self.opt.use_argmax:
-            self.soft_sem_layout = torch.softmax(structure_model_output, dim = 1)
-            self.soft_sem_layout = torch.argmax(self.soft_sem_layout, dim=1, keepdim=True)
-            self.soft_sem_layout = torch.clamp(self.soft_sem_layout, min=0, max=2)
-            self.sem_layout.scatter_(1, self.soft_sem_layout, 1)
-
-        else:
-            self.sem_layout = torch.softmax(structure_model_output, dim = 1)
+        self.soft_sem_layout = torch.softmax(structure_model_output, dim = 1)
+        self.soft_sem_layout = torch.argmax(self.soft_sem_layout, dim=1, keepdim=True)
+        self.soft_sem_layout = torch.clamp(self.soft_sem_layout, min=0, max=2)
+        self.sem_layout.scatter_(1, self.soft_sem_layout, 1)
 
         second_out = self.refinement(torch.cat((masked_input, inverse_mask), 1))  #Enconder + bottleneck
 
