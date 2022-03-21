@@ -86,8 +86,6 @@ def DR_service(
                 blended, overlapped = poisson.poisson_blend(pred, input_mask.squeeze(0).squeeze(0).cpu().numpy(), pred, 'mix', output_dir=None)
                 
             st.image(masked_input, clamp=True, caption='Masked Input Image')
-            #if args.model_type == 'DR':
-            #st.image(raw, clamp=True, caption='Raw Predicted Diminished Panorama')
             st.image(pred, clamp=True, caption='Predicted Diminished Panorama')
             if args.use_blending:
                 st.image(blended, clamp=True, caption='Blended Panorama')
