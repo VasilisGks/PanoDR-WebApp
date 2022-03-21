@@ -2,7 +2,7 @@ imutils==0.5.3
 numpy==1.17.4
 streamlit==1.1
 torchvision
-imageio
+imageio==2.9.0
 Pillow==8.1.0
 opencv-python-headless
 streamlit-webrtc==0.11.0
@@ -10,3 +10,5 @@ lxml
 torch>=1.6.0
 streamlit-drawable-canvas == 0.8.0
 streamlit-webrtc
+typing-extensions==3.10.0.2
+scipy==1.7.3
