@@ -10,3 +10,4 @@ lxml
 torch>=1.6.0
 streamlit-drawable-canvas == 0.8.0
 streamlit-webrtc
+typing-extensions==3.10.0.2
