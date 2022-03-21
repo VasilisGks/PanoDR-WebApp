@@ -49,7 +49,7 @@ def DR_service(
     ) -> None:
         
     stroke_width, stroke_color, bg_color, bg_image, drawing_mode, realtime_update, background_image = initCanvasParams()
-    if st.sidebar.checkbox('Use image blending'):
+    if st.sidebar.checkbox('Use image blending', value=True):
         args.use_blending = True
     if st.sidebar.checkbox('Upload from local folder'):
         bg_image, canvas_result = ApplyCanvas(stroke_width, stroke_color, bg_color, bg_image, drawing_mode, realtime_update, background_image)

@@ -29,21 +29,9 @@ def parseArguments():
     parser.add_argument('--eval_path', type=str, default='output/')
     parser.add_argument('--gpu_id', type=int, default=-1)
     parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--ignore_id_softmax', action='store_false', default=True) #specifies whether to ignore idx=0 for pre-trained segmentation network
-    #PanoPaint
-    parser.add_argument('--segmentation_model_chkpnt', type = str, default = 'D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/Newest/21_net_unet.pth', help = 'Save checkpoints here')
-    #irr 04
-    #parser.add_argument('--eval_chkpnt_folder', type=str, default='D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/Newest/241_net_G.pth')
-    #irr 05: with Linear semantics
-    #Irregular holes
-    #parser.add_argument('--eval_chkpnt_folder', type=str, default='D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/w_l1_weigted/159_net_G.pth') #Irregular holesgood=159
-    #HR DR training with Linear Semantics
-    parser.add_argument('--eval_chkpnt_folder', type=str, default='D:/VCL/Users/gkitsasv/DRext_files/panopaint_chkpnts/HR/73_net_G.pth') #good=159
-    #PanoDR
-    #parser.add_argument('--segmentation_model_chkpnt_dr', type = str, default = 'https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/Unet_epoch23.zip', help = 'Save checkpoints here')
-    #parser.add_argument('--eval_chkpnt_folder_dr', type=str, default='https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/57_net_G.zip')
-    parser.add_argument('--segmentation_model_chkpnt_dr', type = str, default = 'D:/VCL/PanoDR_app/Unet_epoch24.model', help = 'Save checkpoints here')
-    parser.add_argument('--eval_chkpnt_folder_dr', type=str, default='D:/VCL/PanoDR_app/57_net_G.pth')
+    parser.add_argument('--ignore_id_softmax', action='store_false', default=True) 
+    parser.add_argument('--segmentation_model_chkpnt_dr', type = str, default = 'https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/Unet_epoch23.zip')
+    parser.add_argument('--eval_chkpnt_folder_dr', type=str, default='https://github.com/VasilisGks/PanoDR_web_app/releases/download/v.0.1.0/57_net_G.zip')
     parser.add_argument('--use_attention', action='store_true', default=True)
     parser.add_argument('--use_blending', action='store_true', default=False)
     parser.add_argument('--use_LS', action='store_true', default=True)
